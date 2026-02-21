@@ -1,0 +1,20 @@
+{
+  "name": "studyreminderbot",
+  "version": "1.0.0",
+  "description": "StudyReminderBot is an intelligent Telegram assistant that helps students manage study schedules, receive automated task reminders, and stay motivated with curated quotes.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/bot.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.13.5",
+    "dotenv": "^17.3.1",
+    "mongoose": "^9.2.1",
+    "node-cron": "^4.2.1",
+    "telegraf": "^4.16.3"
+  }
+}
