@@ -27,23 +27,38 @@ const initReminderService = (bot) => {
     // Daily summary at 8 PM
     cron.schedule('0 20 * * *', async () => {
         try {
-            // Find all unique users who have tasks today
+            const startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+
+            // Find all unique users who have any pending tasks or completed tasks today
             const users = await Task.distinct('userId');
             for (const userId of users) {
-                const stats = await Task.aggregate([
-                    { $match: { userId, createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) } } },
-                    { $group: { _id: '$completed', count: { $sum: 1 } } }
-                ]);
+                try {
+                    const stats = await Task.aggregate([
+                        {
+                            $match: {
+                                userId,
+                                $or: [
+                                    { completed: false },
+                                    { completed: true, updatedAt: { $gte: startOfDay } }
+                                ]
+                            }
+                        },
+                        { $group: { _id: '$completed', count: { $sum: 1 } } }
+                    ]);
 
-                let completed = 0;
-                let pending = 0;
-                stats.forEach(s => {
-                    if (s._id) completed = s.count;
-                    else pending = s.count;
-                });
+                    let completed = 0;
+                    let pending = 0;
+                    stats.forEach(s => {
+                        if (s._id === true) completed = s.count;
+                        if (s._id === false) pending = s.count;
+                    });
 
-                if (completed > 0 || pending > 0) {
-                    await bot.telegram.sendMessage(userId, `📊 *Daily Study Summary*\nTasks completed: ${completed}\nTasks pending: ${pending}\nKeep up the hard work! 💪`, { parse_mode: 'Markdown' });
+                    if (completed > 0 || pending > 0) {
+                        await bot.telegram.sendMessage(userId, `📊 *Daily Study Summary*\nTasks completed today: ${completed}\nRemaining tasks: ${pending}\nKeep up the hard work! 💪`, { parse_mode: 'Markdown' });
+                    }
+                } catch (userError) {
+                    console.error(`Error sending summary to user ${userId}:`, userError.message);
                 }
             }
         } catch (error) {

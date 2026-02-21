@@ -17,12 +17,14 @@ const taskService = {
     async getTodayTasks(userId) {
         const start = new Date();
         start.setHours(0, 0, 0, 0);
-        const end = new Date();
-        end.setHours(23, 59, 59, 999);
 
+        // Shows all pending tasks OR tasks completed today
         return await Task.find({
             userId,
-            createdAt: { $gte: start, $lte: end }
+            $or: [
+                { completed: false },
+                { completed: true, updatedAt: { $gte: start } }
+            ]
         }).sort({ time: 1 });
     },
 
