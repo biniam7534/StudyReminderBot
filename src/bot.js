@@ -1,7 +1,39 @@
 require('dotenv').config();
 const { Telegraf, session } = require('telegraf');
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
 const connectDB = require('./config/db');
 const initReminderService = require('./services/reminderService');
+const Task = require('./models/Task');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '../frontend')));
+
+app.get('/api/tasks', async (req, res) => {
+    try {
+        const { userId } = req.query;
+        if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
+        const tasks = await Task.find({ userId, completed: false }).sort({ time: 1 });
+        res.json({ success: true, tasks });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.post('/api/tasks', async (req, res) => {
+    try {
+        const { userId, title, time } = req.body;
+        if (!userId || !title || !time) return res.status(400).json({ success: false, message: 'Missing fields' });
+        const newTask = new Task({ userId, title, time });
+        await newTask.save();
+        res.json({ success: true, task: newTask });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
 
 // ==========================================
 // 1. Environment & Config Validation
@@ -82,6 +114,11 @@ const startApp = async () => {
         console.log('   StudyReminderBot is officially ONLINE!');
         console.log('   Listening for events and reminders...');
         console.log('🚀 ========================================== 🚀\n');
+
+        const PORT = process.env.PORT || 3000;
+        app.listen(PORT, () => {
+            console.log(`🌍 Express dashboard server running on http://localhost:${PORT}`);
+        });
 
     } catch (err) {
         console.error('❌ [CRITICAL ERROR] Failed to start application:', err.message);
