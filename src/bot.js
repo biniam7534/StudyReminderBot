@@ -35,6 +35,37 @@ app.post('/api/tasks', async (req, res) => {
     }
 });
 
+// Admin API endpoints
+app.get('/api/admin/dashboard', async (req, res) => {
+    try {
+        const totalTasks = await Task.countDocuments();
+        const pendingTasks = await Task.countDocuments({ completed: false });
+        const completedTasks = await Task.countDocuments({ completed: true });
+
+        // Group by userId to get total users
+        const users = await Task.distinct('userId');
+        const totalUsers = users.length;
+
+        // Get recent tasks
+        const recentTasks = await Task.find()
+            .sort({ createdAt: -1 })
+            .limit(10);
+
+        res.json({
+            success: true,
+            stats: {
+                totalTasks,
+                pendingTasks,
+                completedTasks,
+                totalUsers
+            },
+            recentTasks
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // ==========================================
 // 1. Environment & Config Validation
 // ==========================================
