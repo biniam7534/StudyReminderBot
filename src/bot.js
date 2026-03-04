@@ -35,6 +35,27 @@ app.post('/api/tasks', async (req, res) => {
     }
 });
 
+app.patch('/api/tasks/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { completed } = req.body;
+        const task = await Task.findByIdAndUpdate(id, { completed }, { new: true });
+        res.json({ success: true, task });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.delete('/api/tasks/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await Task.findByIdAndDelete(id);
+        res.json({ success: true, message: 'Task deleted' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // Admin API endpoints
 app.get('/api/admin/dashboard', async (req, res) => {
     try {
