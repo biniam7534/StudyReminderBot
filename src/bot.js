@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Telegraf, session } = require('telegraf');
+const { Telegraf, session, Scenes } = require('telegraf');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -108,6 +108,10 @@ const bot = new Telegraf(BOT_TOKEN);
 // ==========================================
 // Session management (useful for multi-step conversations)
 bot.use(session());
+
+const setReminderScene = require('./scenes/setReminderScene');
+const stage = new Scenes.Stage([setReminderScene]);
+bot.use(stage.middleware());
 
 // Request logging middleware for debugging and analytics
 bot.use(async (ctx, next) => {

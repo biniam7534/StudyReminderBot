@@ -1,7 +1,7 @@
 const taskService = require('../services/taskService');
 
 module.exports = (bot) => {
-    bot.command('today', async (ctx) => {
+    const todayHandler = async (ctx) => {
         try {
             const tasks = await taskService.getTodayTasks(ctx.from.id.toString());
             if (tasks.length === 0) {
@@ -19,5 +19,8 @@ module.exports = (bot) => {
             console.error(error);
             ctx.reply('Failed to fetch today\'s tasks.');
         }
-    });
+    };
+
+    bot.command('today', todayHandler);
+    bot.hears('📅 Study Plan', todayHandler);
 };

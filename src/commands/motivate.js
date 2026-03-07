@@ -8,7 +8,7 @@ const localQuotes = [
 ];
 
 module.exports = (bot) => {
-    bot.command('motivate', async (ctx) => {
+    const motivateHandler = async (ctx) => {
         try {
             const response = await axios.get('https://zenquotes.io/api/random');
             const quote = response.data[0].q;
@@ -18,5 +18,8 @@ module.exports = (bot) => {
             const randomQuote = localQuotes[Math.floor(Math.random() * localQuotes.length)];
             ctx.reply(`✨ *Motivational Quote*\n\n"${randomQuote}"`, { parse_mode: 'Markdown' });
         }
-    });
+    };
+
+    bot.command('motivate', motivateHandler);
+    bot.hears('💡 Motivation', motivateHandler);
 };
