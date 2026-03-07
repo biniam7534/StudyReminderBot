@@ -8,30 +8,10 @@ const initReminderService = require('./services/reminderService');
 const Task = require('./models/Task');
 
 const app = express();
-
-// ==========================================
-// CORS — allow both frontend dev servers
-// ==========================================
-app.use(cors({
-    origin: [
-        'http://localhost:5173', // admin-dashboard
-        'http://localhost:5174', // frontend
-    ],
-    credentials: true,
-}));
+app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// ==========================================
-// Health Check
-// ==========================================
-app.get('/api/health', (req, res) => {
-    res.json({ success: true, message: 'StudyReminderBot API is running', timestamp: new Date().toISOString() });
-});
-
-// ==========================================
-// User Task Endpoints (used by Frontend)
-// ==========================================
 app.get('/api/tasks', async (req, res) => {
     try {
         const { userId } = req.query;
@@ -76,11 +56,7 @@ app.delete('/api/tasks/:id', async (req, res) => {
     }
 });
 
-// ==========================================
-// Admin API Endpoints (used by Admin Dashboard)
-// ==========================================
-
-// Dashboard stats
+// Admin API endpoints
 app.get('/api/admin/dashboard', async (req, res) => {
     try {
         const totalTasks = await Task.countDocuments();
@@ -106,74 +82,6 @@ app.get('/api/admin/dashboard', async (req, res) => {
             },
             recentTasks
         });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// List all tasks with optional filters
-app.get('/api/admin/tasks', async (req, res) => {
-    try {
-        const { status, userId, page = 1, limit = 50 } = req.query;
-        const filter = {};
-        if (status === 'completed') filter.completed = true;
-        if (status === 'pending') filter.completed = false;
-        if (userId) filter.userId = userId;
-
-        const tasks = await Task.find(filter)
-            .sort({ createdAt: -1 })
-            .skip((page - 1) * limit)
-            .limit(Number(limit));
-
-        const total = await Task.countDocuments(filter);
-
-        res.json({ success: true, tasks, total, page: Number(page), limit: Number(limit) });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// List all users with their stats
-app.get('/api/admin/users', async (req, res) => {
-    try {
-        const userIds = await Task.distinct('userId');
-        const users = await Promise.all(userIds.map(async (uid) => {
-            const totalTasks = await Task.countDocuments({ userId: uid });
-            const completed = await Task.countDocuments({ userId: uid, completed: true });
-            const pending = await Task.countDocuments({ userId: uid, completed: false });
-            const lastTask = await Task.findOne({ userId: uid }).sort({ createdAt: -1 });
-            return {
-                userId: uid,
-                totalTasks,
-                completed,
-                pending,
-                lastActive: lastTask ? lastTask.createdAt : null
-            };
-        }));
-        res.json({ success: true, users });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// Admin delete any task
-app.delete('/api/admin/tasks/:id', async (req, res) => {
-    try {
-        const task = await Task.findByIdAndDelete(req.params.id);
-        if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
-        res.json({ success: true, message: 'Task deleted by admin' });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// Admin toggle task status
-app.patch('/api/admin/tasks/:id', async (req, res) => {
-    try {
-        const { completed } = req.body;
-        const task = await Task.findByIdAndUpdate(req.params.id, { completed }, { new: true });
-        if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
-        res.json({ success: true, task });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -228,6 +136,8 @@ const registerCommands = () => {
         require('./commands/done')(bot);
         require('./commands/today')(bot);
         require('./commands/motivate')(bot);
+        // Register the general text handler last, so it doesn't intercept other text-based commands
+        require('./commands/message')(bot);
         console.log('✅ All bot commands loaded successfully.');
     } catch (err) {
         console.error('❌ [ERROR] Failed to load commands:', err.message);

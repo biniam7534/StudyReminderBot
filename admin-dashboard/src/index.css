@@ -7,7 +7,7 @@
     line-height: 1.5;
     font-weight: 400;
 
-    color-scheme: dark;
+    color-scheme: light dark;
     color: rgba(255, 255, 255, 0.87);
     background-color: #0f172a;
 
@@ -19,11 +19,9 @@
 
 body {
     margin: 0;
+    display: flex;
+    place-content: center;
     min-width: 320px;
-    min-height: 100vh;
-}
-
-#root {
     min-height: 100vh;
 }
 
@@ -42,19 +40,5 @@ body {
 }
 
 .btn-primary {
-    @apply px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2;
-}
-
-@keyframes spin-slow {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.animate-spin-slow {
-    animation: spin-slow 1s linear infinite;
+    @apply px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2;
 }
