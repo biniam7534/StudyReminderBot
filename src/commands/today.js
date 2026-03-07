@@ -8,10 +8,18 @@ module.exports = (bot) => {
                 return ctx.reply('No tasks scheduled for today yet. Use /add to create one!');
             }
 
-            let response = '📅 *Today\'s Schedule:*\n\n';
+            let response = '*Today\'s Study Plan:*\n';
+
             tasks.forEach((task, index) => {
-                const status = task.completed ? '✅' : '⏳';
-                response += `${status} *${task.title}* - ${task.time}\n`;
+                // Convert 24hr time (e.g., "14:00") to 12hr time (e.g., "2:00 PM")
+                let [hours, minutes] = task.time.split(':');
+                hours = parseInt(hours, 10);
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12; // the hour '0' should be '12'
+                const formattedTime = `${hours}:${minutes} ${ampm}`;
+
+                response += `${index + 1}. ${task.title} — ${formattedTime}\n`;
             });
 
             ctx.replyWithMarkdown(response);

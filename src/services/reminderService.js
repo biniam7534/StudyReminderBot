@@ -15,7 +15,11 @@ const initReminderService = (bot) => {
             });
 
             for (const task of tasksToNotify) {
-                await bot.telegram.sendMessage(task.userId, `⏰ REMINDER: It's time to study: *${task.title}*!`, { parse_mode: 'Markdown' });
+                await bot.telegram.sendMessage(
+                    task.userId,
+                    `🧩 *Study Reminder!*\nTime to study: *${task.title}*.\nStay focused 🤙`,
+                    { parse_mode: 'Markdown' }
+                );
                 task.notified = true;
                 await task.save();
             }
